@@ -1,0 +1,6 @@
+{
+  "name": "BioExplorer 3D - Το Ανθρώπινο Σώμα",
+  "description": "Διαδραστική τρισδιάστατη εξερεύνηση των εσωτερικών οργάνων του ανθρώπινου σώματος για μαθητές με ηχητική αφήγηση και κουίζ.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
