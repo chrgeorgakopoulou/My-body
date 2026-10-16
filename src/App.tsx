@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Volume2, VolumeX, Eye, EyeOff, Award, HelpCircle } from 'lucide-react';
+import { Volume2, VolumeX, Eye, EyeOff, Award, HelpCircle, Globe } from 'lucide-react';
 import { DiagramViewer } from './components/DiagramViewer';
 import { OrganCardModal } from './components/OrganCardModal';
 import { QuizModal } from './components/QuizModal';
 import { HelpModal } from './components/HelpModal';
-import { DiagramType, ORGANS_DATA, OrganItem } from './types/anatomy';
+import { DiagramType, ORGANS_DATA } from './types/anatomy';
 import { soundEngine } from './audio/soundEffects';
+import { Language, TRANSLATIONS } from './i18n/translations';
 
 export default function App() {
+  const [lang, setLang] = useState<Language>('el');
   const [activeDiagram, setActiveDiagram] = useState<DiagramType>('torso');
   const [selectedOrganId, setSelectedOrganId] = useState<string | null>('heart');
   const [hoveredOrganId, setHoveredOrganId] = useState<string | null>(null);
@@ -18,13 +20,13 @@ export default function App() {
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
+  const t = TRANSLATIONS[lang];
   const selectedOrgan = ORGANS_DATA.find((o) => o.id === selectedOrganId) || null;
   const currentDiagramOrgans = ORGANS_DATA.filter((o) => o.diagram === activeDiagram);
 
   const handleDiagramChange = (type: DiagramType) => {
     soundEngine.playClick();
     setActiveDiagram(type);
-    // Auto-select the hero organ of that diagram
     if (type === 'torso') {
       setSelectedOrganId('heart');
     } else {
@@ -46,59 +48,75 @@ export default function App() {
     soundEngine.setMuted(nextMuted);
   };
 
+  const handleToggleLanguage = () => {
+    soundEngine.playClick();
+    soundEngine.stopSpeech();
+    setLang((prev) => (prev === 'el' ? 'en' : 'el'));
+  };
+
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-slate-950 font-sans text-slate-100 flex flex-col select-none">
       {/* 1. TOP NAVIGATION HEADER */}
       <header className="shrink-0 px-3 py-2.5 sm:px-5 sm:py-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between gap-2 shadow-lg z-30">
         {/* Brand */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-xl shadow-md font-bold text-white">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-xl shadow-md font-bold text-white shrink-0">
             {activeDiagram === 'torso' ? '🫀' : '🧠'}
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-base sm:text-lg font-bold font-heading text-white tracking-wide">
-                BioExplorer
+              <h1 className="text-base sm:text-lg font-bold font-heading text-white tracking-wide truncate">
+                {t.appTitle}
               </h1>
-              <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                10 Ετών
+              <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shrink-0">
+                {t.ageBadge}
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 font-medium">
-              Το Ανθρώπινο Σώμα & το Κεφάλι
+            <p className="text-[11px] text-slate-400 font-medium truncate">
+              {t.appSubtitle}
             </p>
           </div>
         </div>
 
         {/* Central Prominent Diagram Switcher Tabs */}
-        <div className="flex items-center bg-slate-950 p-1 rounded-2xl border border-slate-800 shadow-inner">
+        <div className="flex items-center bg-slate-950 p-1 rounded-2xl border border-slate-800 shadow-inner shrink-0">
           <button
             onClick={() => handleDiagramChange('torso')}
-            className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
               activeDiagram === 'torso'
                 ? 'bg-cyan-500 text-slate-950 shadow-md font-extrabold'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
             <span>🫀</span>
-            <span>Σώμα & Όργανα</span>
+            <span>{t.torsoTab}</span>
           </button>
 
           <button
             onClick={() => handleDiagramChange('head')}
-            className={`flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
               activeDiagram === 'head'
                 ? 'bg-cyan-500 text-slate-950 shadow-md font-extrabold'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
             <span>🧠</span>
-            <span>Διατομή Κεφαλιού</span>
+            <span>{t.headTab}</span>
           </button>
         </div>
 
         {/* Right Action Buttons */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Language Switcher (Greek <-> English) */}
+          <button
+            onClick={handleToggleLanguage}
+            className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
+            title={t.langToggleTitle}
+          >
+            <Globe className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="font-extrabold">{lang === 'el' ? '🇬🇧 English' : '🇬🇷 Ελληνικά'}</span>
+          </button>
+
           {/* Sound Mute Toggle */}
           <button
             onClick={handleToggleMute}
@@ -107,7 +125,7 @@ export default function App() {
                 ? 'bg-rose-950/60 border-rose-500/50 text-rose-300'
                 : 'bg-slate-800 border-slate-700 text-cyan-300 hover:bg-slate-700'
             }`}
-            title={isMuted ? 'Ενεργοποίηση ήχου' : 'Σίγαση ήχου'}
+            title={isMuted ? t.soundUnmuteTitle : t.soundMuteTitle}
           >
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </button>
@@ -120,11 +138,11 @@ export default function App() {
                 ? 'bg-amber-500 text-slate-950 border-amber-400 font-extrabold shadow-md'
                 : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
             }`}
-            title="Κρύψε τις ετικέτες για να δοκιμάσεις τις γνώσεις σου!"
+            title={t.testModeTitle}
           >
             {hideLabelsForTest ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             <span className="hidden md:inline">
-              {hideLabelsForTest ? 'Εξέταση (Ενεργή)' : 'Κρύψε Ετικέτες'}
+              {hideLabelsForTest ? t.testModeActive : t.testModeBtn}
             </span>
           </button>
 
@@ -134,11 +152,11 @@ export default function App() {
               soundEngine.playClick();
               setIsQuizOpen(true);
             }}
-            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95"
-            title="Παίξε το παιχνίδι κουίζ!"
+            className="px-3 sm:px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 cursor-pointer"
+            title={t.quizTitle}
           >
             <Award className="w-4 h-4" />
-            <span className="hidden sm:inline">Κουίζ</span>
+            <span className="hidden sm:inline">{t.quizBtn}</span>
           </button>
 
           {/* Help Instructions */}
@@ -147,8 +165,8 @@ export default function App() {
               soundEngine.playClick();
               setIsHelpOpen(true);
             }}
-            className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 text-xs font-bold"
-            title="Οδηγίες χρήσης"
+            className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 text-xs font-bold cursor-pointer"
+            title={t.helpTitle}
           >
             <HelpCircle className="w-4 h-4 text-cyan-400" />
           </button>
@@ -166,6 +184,7 @@ export default function App() {
             onSelectOrgan={handleSelectOrgan}
             onHoverOrgan={setHoveredOrganId}
             hideLabelsForTest={hideLabelsForTest}
+            lang={lang}
           />
         </div>
 
@@ -178,6 +197,7 @@ export default function App() {
                 onClose={() => setSelectedOrganId(null)}
                 onSelectOrgan={handleSelectOrgan}
                 isSidePanel={true}
+                lang={lang}
               />
             </div>
 
@@ -188,6 +208,7 @@ export default function App() {
                 onClose={() => setSelectedOrganId(null)}
                 onSelectOrgan={handleSelectOrgan}
                 isSidePanel={false}
+                lang={lang}
               />
             </div>
           </>
@@ -198,22 +219,24 @@ export default function App() {
       <footer className="shrink-0 bg-slate-900/90 border-t border-slate-800 px-4 py-2.5 z-20 overflow-x-auto">
         <div className="flex items-center gap-2 min-w-max mx-auto justify-center">
           <span className="text-[11px] font-bold text-slate-400 pr-1 uppercase tracking-wider hidden sm:inline">
-            Όργανα:
+            {lang === 'en' ? 'Organs:' : 'Όργανα:'}
           </span>
           {currentDiagramOrgans.map((organ) => {
             const isSelected = selectedOrganId === organ.id;
+            const displayName = lang === 'en' ? organ.englishName : organ.name;
+
             return (
               <button
                 key={organ.id}
                 onClick={() => handleSelectOrgan(organ.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all border ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all border cursor-pointer ${
                   isSelected
                     ? 'bg-cyan-500 text-slate-950 border-cyan-300 font-bold shadow-lg scale-105'
                     : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700'
                 }`}
               >
                 <span>{organ.icon}</span>
-                <span>{organ.name}</span>
+                <span>{displayName}</span>
               </button>
             );
           })}
@@ -224,6 +247,7 @@ export default function App() {
       {isQuizOpen && (
         <QuizModal
           onClose={() => setIsQuizOpen(false)}
+          lang={lang}
           onFocusOrgan={(id) => {
             setIsQuizOpen(false);
             const organ = ORGANS_DATA.find((o) => o.id === id);
@@ -235,7 +259,7 @@ export default function App() {
         />
       )}
 
-      {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} />}
+      {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} lang={lang} />}
     </div>
   );
 }

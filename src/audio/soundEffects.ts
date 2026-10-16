@@ -249,10 +249,11 @@ class SoundEngine {
     else this.playClick();
   }
 
-  // --- Speech Synthesis (Greek TTS) ---
+  // --- Speech Synthesis (Greek & English TTS) ---
   public speakText(
     text: string,
     options?: {
+      lang?: 'el' | 'en';
       rate?: number;
       onEnd?: () => void;
       onStart?: () => void;
@@ -265,16 +266,20 @@ class SoundEngine {
 
     this.stopSpeech();
 
+    const isEnglish = options?.lang === 'en';
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'el-GR';
-    utterance.rate = options?.rate ?? 0.95; // slightly slower for 10-year-olds
-    utterance.pitch = 1.05; // slightly friendly warm tone
+    utterance.lang = isEnglish ? 'en-US' : 'el-GR';
+    utterance.rate = options?.rate ?? 0.95; // comfortable pace for young learners
+    utterance.pitch = 1.05; // warm, engaging tone
 
-    // Try finding a Greek voice if installed
+    // Try finding matching voice
     const voices = window.speechSynthesis.getVoices();
-    const greekVoice = voices.find((v) => v.lang.startsWith('el') || v.name.toLowerCase().includes('greek'));
-    if (greekVoice) {
-      utterance.voice = greekVoice;
+    if (isEnglish) {
+      const enVoice = voices.find((v) => v.lang.startsWith('en'));
+      if (enVoice) utterance.voice = enVoice;
+    } else {
+      const greekVoice = voices.find((v) => v.lang.startsWith('el') || v.name.toLowerCase().includes('greek'));
+      if (greekVoice) utterance.voice = greekVoice;
     }
 
     if (options?.onStart) utterance.onstart = options.onStart;
