@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Volume2, VolumeX, Eye, EyeOff, Award, FileText, HelpCircle, ChevronRight } from 'lucide-react';
+import { Volume2, VolumeX, Eye, EyeOff, Award, HelpCircle } from 'lucide-react';
 import { DiagramViewer } from './components/DiagramViewer';
 import { OrganCardModal } from './components/OrganCardModal';
 import { QuizModal } from './components/QuizModal';
-import { PromptModal } from './components/PromptModal';
 import { HelpModal } from './components/HelpModal';
 import { DiagramType, ORGANS_DATA, OrganItem } from './types/anatomy';
 import { soundEngine } from './audio/soundEffects';
@@ -17,7 +16,6 @@ export default function App() {
 
   // Modals
   const [isQuizOpen, setIsQuizOpen] = useState(false);
-  const [isPromptOpen, setIsPromptOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const selectedOrgan = ORGANS_DATA.find((o) => o.id === selectedOrganId) || null;
@@ -143,19 +141,6 @@ export default function App() {
             <span className="hidden sm:inline">Κουίζ</span>
           </button>
 
-          {/* Teacher Prompt Button */}
-          <button
-            onClick={() => {
-              soundEngine.playClick();
-              setIsPromptOpen(true);
-            }}
-            className="p-2 sm:px-3 rounded-xl bg-indigo-950/70 border border-indigo-500/50 hover:bg-indigo-900/80 text-indigo-200 text-xs font-bold flex items-center gap-1.5"
-            title="Δείτε την αναλυτική εντολή (Prompt)"
-          >
-            <FileText className="w-4 h-4 text-indigo-400" />
-            <span className="hidden lg:inline">Prompt</span>
-          </button>
-
           {/* Help Instructions */}
           <button
             onClick={() => {
@@ -250,7 +235,6 @@ export default function App() {
         />
       )}
 
-      {isPromptOpen && <PromptModal onClose={() => setIsPromptOpen(false)} />}
       {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} />}
     </div>
   );

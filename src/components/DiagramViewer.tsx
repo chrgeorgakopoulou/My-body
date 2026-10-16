@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Box, Eye } from 'lucide-react';
 import { ORGANS_DATA, DiagramType } from '../types/anatomy';
+import { OrganPopout3D } from './3d/OrganPopout3D';
 
 interface DiagramViewerProps {
   diagram: DiagramType;
@@ -25,6 +27,18 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
   const activeImage = diagram === 'torso' ? TORSO_IMAGE_URL : HEAD_IMAGE_URL;
   const isTorso = diagram === 'torso';
 
+  // 3D Popout state: when an organ is clicked, it pops out in 3D in front of the body
+  const [is3DPoppedOut, setIs3DPoppedOut] = useState<boolean>(true);
+
+  // When an organ changes, pop it out in 3D so student can rotate it
+  useEffect(() => {
+    if (selectedOrganId) {
+      setIs3DPoppedOut(true);
+    }
+  }, [selectedOrganId]);
+
+  const selectedOrgan = ORGANS_DATA.find((o) => o.id === selectedOrganId) || null;
+
   return (
     <div className="relative w-full h-full flex items-center justify-center p-2 sm:p-4 select-none overflow-x-auto overflow-y-hidden">
       {/* Outer sizing container that guarantees left and right margins for the labels */}
@@ -45,6 +59,26 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
 
           {/* Soft edge vignette for high-end medical atlas presentation */}
           <div className="absolute inset-0 pointer-events-none rounded-2xl sm:rounded-3xl ring-1 ring-inset ring-white/10 shadow-[inset_0_0_50px_rgba(2,6,23,0.7)]" />
+
+          {/* 3D ORGAN POPOUT: Pops out from the body when clicked, with 360° interactive rotation */}
+          {selectedOrgan && is3DPoppedOut && (
+            <OrganPopout3D
+              organ={selectedOrgan}
+              onClose={() => setIs3DPoppedOut(false)}
+            />
+          )}
+
+          {/* Floating trigger button to pop the organ out into 3D if student minimized it */}
+          {selectedOrgan && !is3DPoppedOut && (
+            <button
+              onClick={() => setIs3DPoppedOut(true)}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-2xl shadow-cyan-500/40 border-2 border-white cursor-pointer active:scale-95 transition-transform"
+              title="Εμφάνιση τρισδιάστατου μοντέλου"
+            >
+              <Box className="w-4 h-4 text-slate-950" />
+              <span>✨ Δες το {selectedOrgan.name} σε Πραγματικό 3D (360°)!</span>
+            </button>
+          )}
 
           {/* Vector SVG Overlay with Leader Lines and Non-Blinking Steady Pins */}
           <svg
@@ -137,7 +171,10 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
                     stroke="#ffffff"
                     strokeWidth={isSelected ? 0.45 : 0.35}
                     className="cursor-pointer pointer-events-auto transition-transform"
-                    onClick={() => onSelectOrgan(organ.id)}
+                    onClick={() => {
+                      onSelectOrgan(organ.id);
+                      setIs3DPoppedOut(true);
+                    }}
                     onMouseEnter={() => onHoverOrgan(organ.id)}
                     onMouseLeave={() => onHoverOrgan(null)}
                   />
@@ -149,7 +186,10 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
                     r="4"
                     fill="transparent"
                     className="cursor-pointer pointer-events-auto"
-                    onClick={() => onSelectOrgan(organ.id)}
+                    onClick={() => {
+                      onSelectOrgan(organ.id);
+                      setIs3DPoppedOut(true);
+                    }}
                     onMouseEnter={() => onHoverOrgan(organ.id)}
                     onMouseLeave={() => onHoverOrgan(null)}
                   />
@@ -167,7 +207,10 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({
             return (
               <button
                 key={organ.id}
-                onClick={() => onSelectOrgan(organ.id)}
+                onClick={() => {
+                  onSelectOrgan(organ.id);
+                  setIs3DPoppedOut(true);
+                }}
                 onMouseEnter={() => onHoverOrgan(organ.id)}
                 onMouseLeave={() => onHoverOrgan(null)}
                 className={`absolute -translate-y-1/2 flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-xl border cursor-pointer pointer-events-auto whitespace-nowrap z-30 ${

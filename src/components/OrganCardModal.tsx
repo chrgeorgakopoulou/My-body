@@ -11,9 +11,13 @@ import {
   Square,
   Minimize2,
   Maximize2,
+  Box,
+  BookOpen,
 } from 'lucide-react';
 import { OrganItem, ORGANS_DATA } from '../types/anatomy';
 import { soundEngine } from '../audio/soundEffects';
+import { OrganPopout3D } from './3d/OrganPopout3D';
+import { getRealOrganSpecimen } from '../data/realOrganData';
 
 interface OrganCardModalProps {
   organ: OrganItem;
@@ -33,6 +37,7 @@ export const OrganCardModal: React.FC<OrganCardModalProps> = ({
   const [largeText, setLargeText] = useState(false);
   const [isPlayingOrganSound, setIsPlayingOrganSound] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [cardTab, setCardTab] = useState<'info' | '3d'>('info');
 
   // Stop speaking if organ changes or unmounts
   useEffect(() => {
@@ -70,6 +75,8 @@ export const OrganCardModal: React.FC<OrganCardModalProps> = ({
     soundEngine.playOrganSound(organ.soundType);
     setTimeout(() => setIsPlayingOrganSound(false), 1400);
   };
+
+  const specimen = getRealOrganSpecimen(organ.id);
 
   // 1. MINIMIZED SLIM DOCK BANNER (For compact screens when minimized)
   if (isMinimized && !isSidePanel) {
@@ -127,7 +134,7 @@ export const OrganCardModal: React.FC<OrganCardModalProps> = ({
       className={
         isSidePanel
           ? 'relative w-full h-full flex flex-col bg-slate-900/95 border border-cyan-500/40 rounded-3xl shadow-2xl backdrop-blur-xl text-slate-100 overflow-hidden'
-          : 'fixed bottom-14 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-xl max-h-[50vh] flex flex-col bg-slate-900/95 border border-cyan-500/50 rounded-2xl shadow-2xl backdrop-blur-xl text-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 pointer-events-auto'
+          : 'fixed bottom-14 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-xl max-h-[52vh] flex flex-col bg-slate-900/95 border border-cyan-500/50 rounded-2xl shadow-2xl backdrop-blur-xl text-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 pointer-events-auto'
       }
     >
       {/* Top Banner Header */}
@@ -191,53 +198,80 @@ export const OrganCardModal: React.FC<OrganCardModalProps> = ({
         </div>
       </div>
 
-      {/* Voice & Sound Control Bar */}
-      <div className="bg-slate-950/70 px-4 py-2 border-b border-slate-800/80 flex items-center justify-between gap-2 shrink-0">
-        <button
-          onClick={toggleSpeech}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm ${
-            isSpeaking
-              ? 'bg-amber-500 text-slate-950 hover:bg-amber-400'
-              : 'bg-cyan-600 hover:bg-cyan-500 text-white'
-          }`}
-          title="Άκουσε την περιγραφή φωναχτά"
-        >
-          {isSpeaking ? (
-            <>
-              <Square className="w-4 h-4 fill-current" />
-              <span>Διακοπή Ομιλίας</span>
-            </>
-          ) : (
-            <>
-              <Volume2 className="w-4 h-4" />
-              <span>🔊 Διαβάστε μου!</span>
-            </>
-          )}
-        </button>
-
-        {/* Speed button & sound effect button */}
-        <div className="flex items-center gap-2">
-          {/* Play anatomical sound effect */}
+      {/* Tabs: Info vs 3D Model View */}
+      <div className="bg-slate-950 px-4 py-1.5 border-b border-slate-800 flex items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-1 bg-slate-900 p-0.5 rounded-xl border border-slate-800">
           <button
-            onClick={handlePlayOrganSound}
-            disabled={isPlayingOrganSound}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-              isPlayingOrganSound
-                ? 'bg-rose-500/30 border-rose-500 text-rose-300 scale-105'
-                : 'bg-slate-800/90 hover:bg-slate-800 border-slate-700 text-slate-200'
+            onClick={() => setCardTab('info')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+              cardTab === 'info'
+                ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
-            title="Άκουσε τον φυσικό ήχο του οργάνου"
           >
-            {organ.soundType === 'heartbeat' && <Heart className="w-3.5 h-3.5 text-rose-400" />}
-            <span>
-              {organ.soundType === 'heartbeat'
-                ? 'Χτύπος ❤️'
-                : organ.soundType === 'breathing'
-                ? 'Αναπνοή 🫁'
-                : organ.soundType === 'brain'
-                ? 'Σκέψη 🧠'
-                : 'Ήχος 🎵'}
-            </span>
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>Πληροφορίες</span>
+          </button>
+          <button
+            onClick={() => setCardTab('3d')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+              cardTab === '3d'
+                ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Box className="w-3.5 h-3.5" />
+            <span>3D Περιστροφή 360°</span>
+          </button>
+        </div>
+
+        {/* Play sound button */}
+        <button
+          onClick={handlePlayOrganSound}
+          disabled={isPlayingOrganSound}
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold border transition-all ${
+            isPlayingOrganSound
+              ? 'bg-rose-500/30 border-rose-500 text-rose-300 scale-105'
+              : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200'
+          }`}
+          title="Άκουσε τον φυσικό ήχο του οργάνου"
+        >
+          {organ.soundType === 'heartbeat' && <Heart className="w-3 h-3 text-rose-400" />}
+          <span>
+            {organ.soundType === 'heartbeat'
+              ? 'Χτύπος ❤️'
+              : organ.soundType === 'breathing'
+              ? 'Αναπνοή 🫁'
+              : organ.soundType === 'brain'
+              ? 'Σκέψη 🧠'
+              : 'Ήχος 🎵'}
+          </span>
+        </button>
+      </div>
+
+      {/* Voice Narration Control Bar (Visible in info view) */}
+      {cardTab === 'info' && (
+        <div className="bg-slate-950/70 px-4 py-2 border-b border-slate-800/80 flex items-center justify-between gap-2 shrink-0">
+          <button
+            onClick={toggleSpeech}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm ${
+              isSpeaking
+                ? 'bg-amber-500 text-slate-950 hover:bg-amber-400'
+                : 'bg-cyan-600 hover:bg-cyan-500 text-white'
+            }`}
+            title="Άκουσε την περιγραφή φωναχτά"
+          >
+            {isSpeaking ? (
+              <>
+                <Square className="w-4 h-4 fill-current" />
+                <span>Διακοπή Ομιλίας</span>
+              </>
+            ) : (
+              <>
+                <Volume2 className="w-4 h-4" />
+                <span>🔊 Διαβάστε μου!</span>
+              </>
+            )}
           </button>
 
           {/* Speech Rate toggle */}
@@ -249,61 +283,106 @@ export const OrganCardModal: React.FC<OrganCardModalProps> = ({
             {speechRate === 0.9 ? '1.0x' : '0.8x (Αργά)'}
           </button>
         </div>
-      </div>
+      )}
 
-      {/* Scrollable Information Body */}
-      <div className={`p-4 overflow-y-auto space-y-3.5 flex-1 ${largeText ? 'text-base' : 'text-sm'}`}>
-        {/* Short Summary pill */}
-        <div className="p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-800/50 text-cyan-200 font-medium leading-relaxed">
-          ✨ {organ.shortDescription}
+      {/* Card Content Area: 3D View OR Info Text */}
+      {cardTab === '3d' ? (
+        <div className="flex-1 w-full h-full min-h-[260px] relative">
+          <OrganPopout3D organ={organ} onClose={() => setCardTab('info')} inline={true} />
         </div>
-
-        {/* Primary Role / Function */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Ποια είναι η λειτουργία του;</span>
+      ) : (
+        /* Scrollable Information Body */
+        <div className={`p-4 overflow-y-auto space-y-3.5 flex-1 ${largeText ? 'text-base' : 'text-sm'}`}>
+          {/* Short Summary pill */}
+          <div className="p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-800/50 text-cyan-200 font-medium leading-relaxed">
+            ✨ {organ.shortDescription}
           </div>
-          <p className="text-slate-200 leading-relaxed font-normal bg-slate-800/40 p-2.5 rounded-xl border border-slate-800">
-            {organ.role}
-          </p>
-        </div>
 
-        {/* How it works */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
-            <span className="text-xs">⚙️</span>
-            <span>Πώς λειτουργεί;</span>
+          {/* Real Medical Specimen Card */}
+          <div className="p-3 rounded-2xl bg-slate-950/80 border border-emerald-500/40 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                Πραγματική Ιατρική Ανατομία
+              </span>
+              <span className="text-[10px] text-slate-400 font-medium">
+                {specimen.weightOrSize}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <img
+                src={specimen.imageSrc}
+                alt={specimen.title}
+                className="w-16 h-16 rounded-xl object-cover border border-emerald-500/50 shadow-md shrink-0 cursor-pointer hover:scale-105 transition-transform"
+                onClick={() => setCardTab('3d')}
+              />
+              <div className="min-w-0">
+                <h4 className="text-xs font-bold text-white truncate">
+                  {specimen.title}
+                </h4>
+                <p className="text-[11px] text-slate-300 line-clamp-2 leading-snug mt-0.5">
+                  {specimen.realColorDescription}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setCardTab('3d')}
+              className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-600/90 to-cyan-600/90 hover:from-emerald-500 hover:to-cyan-500 text-slate-950 text-xs font-extrabold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+            >
+              <Box className="w-4 h-4 text-slate-950" />
+              <span>Περιστροφή 360° & Μεγεθυντικός Φακός HD</span>
+            </button>
           </div>
-          <p className="text-slate-300 leading-relaxed font-normal bg-slate-800/40 p-2.5 rounded-xl border border-slate-800">
-            {organ.howItWorks}
-          </p>
-        </div>
 
-        {/* Fun Fact for 10-year-olds */}
-        <div className="p-3 rounded-xl bg-gradient-to-r from-amber-500/15 to-orange-500/10 border border-amber-500/30 space-y-1">
-          <div className="flex items-center gap-1.5 text-amber-400 font-bold text-xs uppercase tracking-wider">
-            <Lightbulb className="w-3.5 h-3.5" />
-            <span>Ήξερες ότι...;</span>
-          </div>
-          <p className="text-amber-100/90 leading-relaxed font-medium">
-            {organ.funFact}
-          </p>
-        </div>
-
-        {/* Advice for healthy kids */}
-        <div className="p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-start gap-2.5">
-          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-          <div>
-            <span className="block text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-0.5">
-              Συμβουλή για γερό σώμα:
-            </span>
-            <p className="text-emerald-100/90 text-xs sm:text-sm leading-relaxed">
-              {organ.kidAdvice}
+          {/* Primary Role / Function */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Ποια είναι η λειτουργία του;</span>
+            </div>
+            <p className="text-slate-200 leading-relaxed font-normal bg-slate-800/40 p-2.5 rounded-xl border border-slate-800">
+              {organ.role}
             </p>
           </div>
+
+          {/* How it works */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+              <span className="text-xs">⚙️</span>
+              <span>Πώς λειτουργεί;</span>
+            </div>
+            <p className="text-slate-300 leading-relaxed font-normal bg-slate-800/40 p-2.5 rounded-xl border border-slate-800">
+              {organ.howItWorks}
+            </p>
+          </div>
+
+          {/* Fun Fact for 10-year-olds */}
+          <div className="p-3 rounded-xl bg-gradient-to-r from-amber-500/15 to-orange-500/10 border border-amber-500/30 space-y-1">
+            <div className="flex items-center gap-1.5 text-amber-400 font-bold text-xs uppercase tracking-wider">
+              <Lightbulb className="w-3.5 h-3.5" />
+              <span>Ήξερες ότι...;</span>
+            </div>
+            <p className="text-amber-100/90 leading-relaxed font-medium">
+              {organ.funFact}
+            </p>
+          </div>
+
+          {/* Advice for healthy kids */}
+          <div className="p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-start gap-2.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <span className="block text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-0.5">
+                Συμβουλή για γερό σώμα:
+              </span>
+              <p className="text-emerald-100/90 text-xs sm:text-sm leading-relaxed">
+                {organ.kidAdvice}
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Footer Organ Pager */}
       <div className="p-2.5 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between gap-2 shrink-0">
